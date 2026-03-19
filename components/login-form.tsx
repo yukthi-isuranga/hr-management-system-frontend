@@ -15,34 +15,57 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'form'>) {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: 'Admin',
+      username: 'admin',
       password: '123',
     },
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    toast('You submitted the following values:', {
-      description: (
-        <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      position: 'bottom-right',
-      classNames: {
-        content: 'flex flex-col gap-2',
-      },
-      style: {
-        '--border-radius': 'calc(var(--radius)  + 4px)',
-      } as React.CSSProperties,
-    });
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    try {
+      toast('You submitted the following values:', {
+        description: (
+          <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
+            <code>{JSON.stringify(data, null, 2)}</code>
+          </pre>
+        ),
+        position: 'bottom-right',
+        classNames: {
+          content: 'flex flex-col gap-2',
+        },
+        style: {
+          '--border-radius': 'calc(var(--radius)  + 4px)',
+        } as React.CSSProperties,
+      });
+      const loginData = await loginFunction(data);
+
+      switch (loginData.role) {
+        case 'ADMIN':
+          router.push('/admin/dashboard');
+          break;
+        case 'HR':
+          router.push('/hr/dashboard');
+          break;
+        case 'USER':
+          router.push('/user/dashboard');
+          break;
+        default:
+          router.push('/');
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) toast.error(err.message);
+      else toast.error('Unknown error occurred');
+    }
   }
   return (
     // <form className={cn('flex flex-col gap-6', className)} {...props}>
@@ -137,3 +160,36 @@ export const formSchema = z.object({
     .min(3, 'Password must be at least 3 characters.')
     .max(16, 'Password must be at most 100 characters.'),
 });
+
+export interface LoginBody {
+  username: string;
+  password: string;
+}
+export interface LoginBody {
+  username: string;
+  password: string;
+}
+
+export const loginFunction = async (body: LoginBody) => {
+  try {
+    const response = await fetch('https://localhost:7268/api/Auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'include', // include cookies
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
+    }
+
+    toast.success(data.message);
+
+    return data; // { message: "ADMIN Login successful" }
+  } catch (error: unknown) {
+    if (error instanceof Error) throw error;
+    else throw new Error('Unknown login error');
+  }
+};

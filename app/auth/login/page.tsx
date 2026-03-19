@@ -25,7 +25,9 @@ export default function LoginPage() {
           src="/Login.jpg"
           alt="Image"
           fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          quality={100} // 👈 add this
+          priority // better than loading="eager"
+          sizes="100vw"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
       </div>
