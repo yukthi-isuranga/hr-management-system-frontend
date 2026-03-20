@@ -36,6 +36,7 @@ export default function DepartmentTable() {
 
   const [editingDep, setEditingDep] = useState<Department | null>(null);
   const [deletingDep, setDeletingDep] = useState<Department | null>(null);
+  const [creatingDep, setCreatingDep] = useState(false);
 
   const fetchDepartment = async () => {
     try {
@@ -61,7 +62,11 @@ export default function DepartmentTable() {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="rounded-2xl border p-4">
+    <div className="rounded-2xl border p-4 space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">Departments</h2>
+        {/* <Button onClick={() => setCreatingDep(true)}>Add New Department</Button> */}
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -93,7 +98,9 @@ export default function DepartmentTable() {
                     <DropdownMenuItem onClick={() => setEditingDep(dept)}>
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Make a copy</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCreatingDep(true)}>
+                      Add New Department
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Favorite</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -189,6 +196,38 @@ export default function DepartmentTable() {
           }}
         />
       )}
+
+      {/* Creation Dialog Reusing the Exact Same DeptEditDialog */}
+      <DeptEditDialog
+        open={creatingDep}
+        onOpenChange={setCreatingDep}
+        onUpdate={async (newData) => {
+          try {
+            const res = await fetch(`/api/departments`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(newData),
+            });
+
+            if (!res.ok) {
+              const errData = await res.json().catch(() => null);
+              console.error('Failed to create Department:', errData);
+              throw new Error('Failed to create Department');
+            }
+
+            await fetchDepartment(); // Instantly visually refresh the row list!
+            setCreatingDep(false);
+            toast.success('Department created successfully!');
+          } catch (err) {
+            console.error(err);
+            toast.error('Failed to create Department. Check console.');
+          } finally {
+            router.refresh();
+          }
+        }}
+      />
     </div>
   );
 }

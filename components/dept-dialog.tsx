@@ -29,7 +29,7 @@ const departmentEditSchema = z.object({
 });
 
 interface DeptEditDialogProps {
-  department: Department;
+  department?: Department;
   onUpdate: (data: Partial<Department>) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -41,18 +41,20 @@ export function DeptEditDialog({
   open,
   onOpenChange,
 }: DeptEditDialogProps) {
+  const isEditing = !!department;
+
   const form = useForm<z.infer<typeof departmentEditSchema>>({
     resolver: zodResolver(departmentEditSchema),
     defaultValues: {
-      departmentName: department.departmentName,
-      departmentCode: department.departmentCode,
+      departmentName: department?.departmentName || '',
+      departmentCode: department?.departmentCode || '',
     },
   });
 
   const handleSubmit = (data: z.infer<typeof departmentEditSchema>) => {
     onUpdate({
       ...data,
-      id: department.id,
+      id: department?.id, // undefined for new departments
     });
   };
 
@@ -60,14 +62,14 @@ export function DeptEditDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {open === undefined && (
         <AlertDialogTrigger asChild>
-          <Button variant="outline">Edit department</Button>
+          <Button variant="outline">{isEditing ? 'Edit' : 'Create'} department</Button>
         </AlertDialogTrigger>
       )}
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>Edit department</AlertDialogTitle>
+          <AlertDialogTitle>{isEditing ? 'Edit' : 'Create'} department</AlertDialogTitle>
           <AlertDialogDescription>
-            Update the department information below.
+            {isEditing ? 'Update' : 'Enter'} the department information below.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
