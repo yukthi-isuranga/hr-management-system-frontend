@@ -1,8 +1,15 @@
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { LoginForm } from '@/components/login-form';
 import { GalleryVerticalEnd } from 'lucide-react';
 import Image from 'next/image';
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const cookieStore = await cookies();
+  if (cookieStore.has('jwtToken')) {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">

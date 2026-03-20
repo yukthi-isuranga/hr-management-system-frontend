@@ -1,31 +1,18 @@
-'use client';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import ClientCareTakerLayout from './client-layout';
 
-import { AppSidebar } from '@/components/ui/app-sidebar';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { SiteHeader } from '@/components/ui/site-header';
-import { TooltipProvider } from '@/components/ui/tooltip';
-
-export default function CareTakerLayout({
+export default async function CareTakerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <TooltipProvider>
-      <SidebarProvider
-        style={
-          {
-            '--sidebar-width': 'calc(var(--spacing) * 72)',
-            '--header-height': 'calc(var(--spacing) * 12)',
-          } as React.CSSProperties
-        }
-      >
-        <AppSidebar variant="inset" />
-        <SidebarInset>
-          <SiteHeader />
-          {children}
-        </SidebarInset>
-      </SidebarProvider>
-    </TooltipProvider>
-  );
+  const cookieStore = await cookies();
+  const token = cookieStore.get('jwtToken')?.value;
+
+  if (!token) {
+    redirect('/');
+  }
+
+  return <ClientCareTakerLayout>{children}</ClientCareTakerLayout>;
 }
