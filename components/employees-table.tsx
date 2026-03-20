@@ -31,7 +31,8 @@ export interface Employees {
   dateOfBirth: Date;
   salary: number;
   age: number;
-  departments: string[];
+  departments: number[];
+  departmentIds?: number[];
 }
 
 export default function EmployeesTable() {
@@ -92,7 +93,7 @@ export default function EmployeesTable() {
               <TableCell>{emp.dateOfBirth.toString() || '-'}</TableCell>
               <TableCell>{emp.age || '-'}</TableCell>
               <TableCell>{emp.salary || '-'}</TableCell>
-              <TableCell>{emp.departments || '-'}</TableCell>
+              <TableCell>{emp.departments?.join(', ') || '-'}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

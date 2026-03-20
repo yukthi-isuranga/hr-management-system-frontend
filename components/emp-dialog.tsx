@@ -28,7 +28,8 @@ export interface Employees {
   dateOfBirth: Date;
   salary: number;
   age: number;
-  departments: string[];
+  departments: number[];
+  departmentIds?: number[];
 }
 
 // Zod schema for editable fields
@@ -38,7 +39,7 @@ const employeeEditSchema = z.object({
   email: z.string().email('Invalid email'),
   dateOfBirth: z.string().min(1, 'Date of birth is required'),
   salary: z.number().min(0, 'Salary must be positive'),
-  departments: z.array(z.string()).min(1, 'Select at least one department'),
+  departmentIdsStr: z.string().optional(),
 });
 
 interface EmpEditDialogProps {
@@ -48,7 +49,12 @@ interface EmpEditDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function EmpEditDialog({ employee, onUpdate, open, onOpenChange }: EmpEditDialogProps) {
+export function EmpEditDialog({
+  employee,
+  onUpdate,
+  open,
+  onOpenChange,
+}: EmpEditDialogProps) {
   const isEditing = !!employee;
 
   const form = useForm<z.infer<typeof employeeEditSchema>>({
@@ -57,15 +63,27 @@ export function EmpEditDialog({ employee, onUpdate, open, onOpenChange }: EmpEdi
       firstName: employee?.firstName || '',
       lastName: employee?.lastName || '',
       email: employee?.email || '',
-      dateOfBirth: employee?.dateOfBirth ? employee.dateOfBirth.toString().split('T')[0] : '', // format YYYY-MM-DD
+      dateOfBirth: employee?.dateOfBirth
+        ? employee.dateOfBirth.toString().split('T')[0]
+        : '', // format YYYY-MM-DD
       salary: employee?.salary || 0,
-      departments: employee?.departments || [],
+      departmentIdsStr: employee?.departments ? employee.departments.join(', ') : '',
     },
   });
 
   const handleSubmit = (data: z.infer<typeof employeeEditSchema>) => {
+    // Parse the textual comma-separated UI field safely back into a numeric array purely on submit
+    const parsedIds = (data.departmentIdsStr || '')
+      .split(',')
+      .map((d) => parseInt(d.trim(), 10))
+      .filter((n) => !isNaN(n));
+
     onUpdate({
-      ...data,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      salary: data.salary,
+      departmentIds: parsedIds,
       id: employee?.id,
       age: employee?.age,
       dateOfBirth: new Date(data.dateOfBirth),
@@ -76,12 +94,16 @@ export function EmpEditDialog({ employee, onUpdate, open, onOpenChange }: EmpEdi
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {open === undefined && (
         <AlertDialogTrigger asChild>
-          <Button variant="outline">{isEditing ? 'Edit' : 'Create'} Employee</Button>
+          <Button variant="outline">
+            {isEditing ? 'Edit' : 'Create'} Employee
+          </Button>
         </AlertDialogTrigger>
       )}
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>{isEditing ? 'Edit' : 'Create'} Employee</AlertDialogTitle>
+          <AlertDialogTitle>
+            {isEditing ? 'Edit' : 'Create'} Employee
+          </AlertDialogTitle>
           <AlertDialogDescription>
             {isEditing ? 'Update' : 'Enter'} the employee information below.
           </AlertDialogDescription>
@@ -155,11 +177,13 @@ export function EmpEditDialog({ employee, onUpdate, open, onOpenChange }: EmpEdi
             render={({ field, fieldState }) => (
               <Field>
                 <FieldLabel htmlFor={field.name}>Salary</FieldLabel>
-                <Input 
-                   {...field} 
-                   id={field.name} 
-                   type="number" 
-                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
+                <Input
+                  {...field}
+                  id={field.name}
+                  type="number"
+                  onChange={(e) =>
+                    field.onChange(parseFloat(e.target.value) || 0)
+                  }
                 />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
@@ -170,22 +194,17 @@ export function EmpEditDialog({ employee, onUpdate, open, onOpenChange }: EmpEdi
 
           {/* Departments */}
           <Controller
-            name="departments"
+            name="departmentIdsStr"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field>
                 <FieldLabel htmlFor={field.name}>
-                  Departments (comma separated)
+                  Department IDs (comma separated)
                 </FieldLabel>
                 <Input
                   {...field}
                   id={field.name}
-                  value={field.value.join(', ')}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value.split(',').map((d) => d.trim()),
-                    )
-                  }
+                  type="text"
                 />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
