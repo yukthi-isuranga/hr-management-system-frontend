@@ -67,7 +67,9 @@ export function EmpEditDialog({
         ? employee.dateOfBirth.toString().split('T')[0]
         : '', // format YYYY-MM-DD
       salary: employee?.salary || 0,
-      departmentIdsStr: employee?.departments ? employee.departments.join(', ') : '',
+      departmentIdsStr: employee?.departments
+        ? employee.departments.join(', ')
+        : '',
     },
   });
 
@@ -201,11 +203,7 @@ export function EmpEditDialog({
                 <FieldLabel htmlFor={field.name}>
                   Department IDs (comma separated)
                 </FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  type="text"
-                />
+                <Input {...field} id={field.name} type="text" />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
