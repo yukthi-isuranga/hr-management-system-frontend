@@ -21,6 +21,7 @@ import { IconDotsVertical } from '@tabler/icons-react';
 import { EmpEditDialog } from './emp-dialog';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { EmpDleteAlertDialog } from './empDelete';
 
 export interface Employees {
   id: number;
@@ -37,6 +38,7 @@ export default function EmployeesTable() {
   const [data, setData] = useState<Employees[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingEmp, setEditingEmp] = useState<Employees | null>(null);
+  const [deletingEmp, setDeletingEmp] = useState<Employees | null>(null);
   const router = useRouter();
 
   const fetchEmployees = async () => {
@@ -109,7 +111,10 @@ export default function EmployeesTable() {
                     <DropdownMenuItem>Make a copy</DropdownMenuItem>
                     <DropdownMenuItem>Favorite</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => setDeletingEmp(emp)}
+                    >
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -166,7 +171,7 @@ export default function EmployeesTable() {
 
               // Instantly refetch all SQL data into the component state
               await fetchEmployees();
-              
+
               setEditingEmp(null); // close dialog
             } catch (err) {
               console.error(err);
@@ -174,6 +179,43 @@ export default function EmployeesTable() {
                 'Failed to update employee. Check console for details.',
               );
             } finally {
+              router.refresh();
+            }
+          }}
+        />
+      )}
+      {deletingEmp && (
+        <EmpDleteAlertDialog
+          empId={deletingEmp.id.toString()}
+          open={!!deletingEmp}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setDeletingEmp(null);
+          }}
+          onDelete={async () => {
+            try {
+              // Call the PUT API
+              const res = await fetch(`/api/employees/${deletingEmp.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                //   body: JSON.stringify(updatedData),
+              });
+
+              if (!res.ok) {
+                const errData = await res.json().catch(() => null);
+                console.error('Failed to update employee:', errData);
+                throw new Error('Failed to update employee');
+              }
+
+              await res.json().catch(() => null); // Safely consume response regardless of 200/204
+            } catch (err) {
+              console.error(err);
+              toast.error(
+                'Failed to update employee. Check console for details.',
+              );
+            } finally {
+              await fetchEmployees();
               router.refresh();
             }
           }}
