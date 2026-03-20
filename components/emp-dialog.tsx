@@ -42,30 +42,32 @@ const employeeEditSchema = z.object({
 });
 
 interface EmpEditDialogProps {
-  employee: Employees;
+  employee?: Employees;
   onUpdate: (data: Partial<Employees>) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
 export function EmpEditDialog({ employee, onUpdate, open, onOpenChange }: EmpEditDialogProps) {
+  const isEditing = !!employee;
+
   const form = useForm<z.infer<typeof employeeEditSchema>>({
     resolver: zodResolver(employeeEditSchema),
     defaultValues: {
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      email: employee.email,
-      dateOfBirth: employee.dateOfBirth ? employee.dateOfBirth.toString().split('T')[0] : '', // format YYYY-MM-DD
-      salary: employee.salary,
-      departments: employee.departments || [],
+      firstName: employee?.firstName || '',
+      lastName: employee?.lastName || '',
+      email: employee?.email || '',
+      dateOfBirth: employee?.dateOfBirth ? employee.dateOfBirth.toString().split('T')[0] : '', // format YYYY-MM-DD
+      salary: employee?.salary || 0,
+      departments: employee?.departments || [],
     },
   });
 
   const handleSubmit = (data: z.infer<typeof employeeEditSchema>) => {
     onUpdate({
       ...data,
-      id: employee.id,
-      age: employee.age,
+      id: employee?.id,
+      age: employee?.age,
       dateOfBirth: new Date(data.dateOfBirth),
     });
   };
@@ -74,14 +76,14 @@ export function EmpEditDialog({ employee, onUpdate, open, onOpenChange }: EmpEdi
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {open === undefined && (
         <AlertDialogTrigger asChild>
-          <Button variant="outline">Edit Employee</Button>
+          <Button variant="outline">{isEditing ? 'Edit' : 'Create'} Employee</Button>
         </AlertDialogTrigger>
       )}
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>Edit Employee</AlertDialogTitle>
+          <AlertDialogTitle>{isEditing ? 'Edit' : 'Create'} Employee</AlertDialogTitle>
           <AlertDialogDescription>
-            Update the employee information below.
+            {isEditing ? 'Update' : 'Enter'} the employee information below.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -153,7 +155,12 @@ export function EmpEditDialog({ employee, onUpdate, open, onOpenChange }: EmpEdi
             render={({ field, fieldState }) => (
               <Field>
                 <FieldLabel htmlFor={field.name}>Salary</FieldLabel>
-                <Input {...field} id={field.name} type="number" />
+                <Input 
+                   {...field} 
+                   id={field.name} 
+                   type="number" 
+                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
+                />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}

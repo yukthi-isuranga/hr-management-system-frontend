@@ -38,6 +38,7 @@ export default function EmployeesTable() {
   const [data, setData] = useState<Employees[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingEmp, setEditingEmp] = useState<Employees | null>(null);
+  const [creatingEmp, setCreatingEmp] = useState(false);
   const [deletingEmp, setDeletingEmp] = useState<Employees | null>(null);
   const router = useRouter();
 
@@ -107,6 +108,9 @@ export default function EmployeesTable() {
                   <DropdownMenuContent align="end" className="w-32">
                     <DropdownMenuItem onClick={() => setEditingEmp(emp)}>
                       Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCreatingEmp(true)}>
+                      Make a New Employee
                     </DropdownMenuItem>
                     <DropdownMenuItem>Make a copy</DropdownMenuItem>
                     <DropdownMenuItem>Favorite</DropdownMenuItem>
@@ -221,6 +225,38 @@ export default function EmployeesTable() {
           }}
         />
       )}
+
+      {/* Creation Modal dynamically leveraging EmpEditDialog UI for NEW entities! */}
+      <EmpEditDialog
+        open={creatingEmp}
+        onOpenChange={setCreatingEmp}
+        onUpdate={async (newData) => {
+          try {
+            const res = await fetch(`/api/employees`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(newData),
+            });
+
+            if (!res.ok) {
+              const errData = await res.json().catch(() => null);
+              console.error('Failed to create Employee:', errData);
+              throw new Error('Failed to create Employee');
+            }
+
+            await fetchEmployees();
+            setCreatingEmp(false);
+            toast.success('Employee securely created!');
+          } catch (err) {
+            console.error(err);
+            toast.error('Failed to construct Employee. See Console!');
+          } finally {
+            router.refresh();
+          }
+        }}
+      />
     </div>
   );
 }
