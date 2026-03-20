@@ -55,7 +55,12 @@ const data = {
       url: '/department',
       icon: IconUser,
     },
-
+    {
+      id: 'employees',
+      title: 'Employees',
+      url: '/employees',
+      icon: IconUser,
+    },
     // {
     //   title: 'Analytics',
     //   url: '#',
