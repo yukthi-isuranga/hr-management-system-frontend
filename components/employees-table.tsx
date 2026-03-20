@@ -32,7 +32,6 @@ export interface Employees {
   salary: number;
   age: number;
   departments: number[];
-  departmentIds?: number[];
 }
 
 export default function EmployeesTable() {
