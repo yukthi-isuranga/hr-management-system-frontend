@@ -9,37 +9,52 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { Button } from './ui/button';
+import { IconDotsVertical } from '@tabler/icons-react';
+import { DeptEditDialog } from './dept-dialog';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
-type Department = {
+export type Department = {
   id: number;
   departmentCode: string;
   departmentName: string;
 };
 
 export default function DepartmentTable() {
+  const router = useRouter();
   const [data, setData] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/departments');
-        if (!res.ok) {
-          const errData = await res.json().catch(() => null);
-          console.error('API error:', errData);
-          throw new Error('Failed to fetch departments');
-        }
+  const [editingDep, setEditingDep] = useState<Department | null>(null);
+  const [deletingDep, setDeletingDep] = useState<Department | null>(null);
 
-        const json = await res.json();
-        setData(json ?? []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const fetchDepartment = async () => {
+    try {
+      const res = await fetch('/api/departments');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        console.error('API error:', errData);
+        throw new Error('Failed to fetch departments');
       }
-    };
 
-    fetchData();
+      const json = await res.json();
+      setData(json ?? []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchDepartment();
   }, []);
 
   if (loading) return <p>Loading...</p>;
@@ -61,10 +76,80 @@ export default function DepartmentTable() {
               <TableCell>{dept.id}</TableCell>
               <TableCell>{dept.departmentCode || '-'}</TableCell>
               <TableCell>{dept.departmentName || '-'}</TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                      size="icon"
+                    >
+                      <IconDotsVertical />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32">
+                    <DropdownMenuItem onClick={() => setEditingDep(dept)}>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>Make a copy</DropdownMenuItem>
+                    <DropdownMenuItem>Favorite</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => setDeletingDep(dept)}
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {editingDep && (
+        <DeptEditDialog
+          department={editingDep}
+          open={!!editingDep}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setEditingDep(null);
+          }}
+          onUpdate={async (updatedData) => {
+            try {
+              // Call the PUT API
+              const res = await fetch(`/api/departments/${updatedData.id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedData),
+              });
+
+              if (!res.ok) {
+                const errData = await res.json().catch(() => null);
+                console.error('Failed to update Department:', errData);
+                throw new Error('Failed to update Department');
+              }
+
+              await res.json().catch(() => null); // Safely consume response regardless of 200/204
+
+              // Instantly refetch all SQL data into the component state
+              await fetchDepartment();
+
+              setEditingDep(null); // close dialog
+            } catch (err) {
+              console.error(err);
+              toast.error(
+                'Failed to update Department. Check console for details.',
+              );
+            } finally {
+              router.refresh();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
