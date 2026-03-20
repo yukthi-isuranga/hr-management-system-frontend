@@ -21,6 +21,7 @@ import { IconDotsVertical } from '@tabler/icons-react';
 import { DeptEditDialog } from './dept-dialog';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { EmpDleteAlertDialog } from './empDelete';
 
 export type Department = {
   id: number;
@@ -145,6 +146,44 @@ export default function DepartmentTable() {
                 'Failed to update Department. Check console for details.',
               );
             } finally {
+              router.refresh();
+            }
+          }}
+        />
+      )}
+
+      {deletingDep && (
+        <EmpDleteAlertDialog
+          empId={deletingDep.id.toString()}
+          open={!!deletingDep}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setDeletingDep(null);
+          }}
+          onDelete={async () => {
+            try {
+              // Call the PUT API
+              const res = await fetch(`/api/departments/${deletingDep.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                //   body: JSON.stringify(updatedData),
+              });
+
+              if (!res.ok) {
+                const errData = await res.json().catch(() => null);
+                console.error('Failed to update employee:', errData);
+                throw new Error('Failed to update employee');
+              }
+
+              await res.json().catch(() => null); // Safely consume response regardless of 200/204
+            } catch (err) {
+              console.error(err);
+              toast.error(
+                'Failed to update employee. Check console for details.',
+              );
+            } finally {
+              await fetchDepartment();
               router.refresh();
             }
           }}
