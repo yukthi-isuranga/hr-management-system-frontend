@@ -51,7 +51,7 @@ export function LoginForm({
 
       switch (loginData.role) {
         case 'ADMIN':
-          router.push('/admin/dashboard');
+          router.push('/dashboard');
           break;
         case 'HR':
           router.push('/hr/dashboard');
