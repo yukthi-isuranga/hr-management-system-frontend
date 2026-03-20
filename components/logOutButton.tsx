@@ -12,7 +12,7 @@ export const LogOutButton = () => {
 
 export const LogOutFunction = async (router: ReturnType<typeof useRouter>) => {
   try {
-    const res = await fetch('http://localhost:5001/auth/logout', {
+    const res = await fetch('/api/auth/logout', {
       method: 'POST',
       credentials: 'include', // important if JWT is in cookie
       headers: {
@@ -28,7 +28,6 @@ export const LogOutFunction = async (router: ReturnType<typeof useRouter>) => {
     }
 
     toast.success(result.message || 'Logged out successfully');
-    localStorage.removeItem('jwtToken');
 
     // Redirect user to login page
     router.push('/'); // soft navigation
