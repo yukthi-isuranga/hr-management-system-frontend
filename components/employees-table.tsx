@@ -67,7 +67,17 @@ export default function EmployeesTable() {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="rounded-2xl border p-4">
+    <div className="rounded-2xl border p-4 space-y-4 ">
+      <div className="flex items-center w-full">
+        <h2 className="text-xl font-bold">Departments</h2>
+
+        <Button
+          className="ml-auto flex items-center"
+          onClick={() => setCreatingEmp(true)}
+        >
+          Add New Employee
+        </Button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -175,6 +185,8 @@ export default function EmployeesTable() {
 
               // Instantly refetch all SQL data into the component state
               await fetchEmployees();
+
+              toast.success('Employee Edit Successfully...');
 
               setEditingEmp(null); // close dialog
             } catch (err) {

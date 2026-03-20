@@ -22,6 +22,7 @@ import { DeptEditDialog } from './dept-dialog';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { EmpDleteAlertDialog } from './empDelete';
+import { Plus } from 'lucide-react';
 
 export type Department = {
   id: number;
@@ -63,10 +64,17 @@ export default function DepartmentTable() {
 
   return (
     <div className="rounded-2xl border p-4 space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center w-full">
         <h2 className="text-xl font-bold">Departments</h2>
-        {/* <Button onClick={() => setCreatingDep(true)}>Add New Department</Button> */}
+
+        <Button
+          className="ml-auto flex items-center"
+          onClick={() => setCreatingDep(true)}
+        >
+          Add New Department
+        </Button>
       </div>
+
       <Table>
         <TableHeader>
           <TableRow>

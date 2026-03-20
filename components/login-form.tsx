@@ -54,10 +54,14 @@ export function LoginForm({
           router.push('/dashboard');
           break;
         case 'HR':
-          router.push('/hr/dashboard');
+          // router.push('/hr/dashboard');
+          router.push('/dashboard');
+
           break;
         case 'USER':
-          router.push('/user/dashboard');
+          // router.push('/user/dashboard');
+          router.push('/dashboard');
+
           break;
         default:
           router.push('/');
@@ -153,7 +157,7 @@ export function LoginForm({
 export const formSchema = z.object({
   username: z
     .string()
-    .min(3, 'Bug title must be at least 5 characters.')
+    .min(2, 'Bug title must be at least 5 characters.')
     .max(32, 'Bug title must be at most 32 characters.'),
   password: z
     .string()
